@@ -1,0 +1,112 @@
+# Libraries required
+
+import requests
+import pandas as pd
+from bs4 import BeautifulSoup as bs
+import re
+
+
+#To fetch NIFTY_50 stocks details
+
+def N_50(stock_id):
+    
+    stock_url="https://www1.nseindia.com/live_market/dynaContent/live_watch/get_quote/GetQuote.jsp?symbol="+stock_id
+    headers = {'user-agent':'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/79.0.3945.117 Safari/537.36'}    
+    
+
+    response=requests.get(stock_url,headers=headers) 
+    soup=bs(response.text,"html.parser")
+    data=soup.find(id='responseDiv').getText().strip().split(':')
+
+    for i in data:
+
+        if 'lastPrice' in i:
+            index=data.index(i)+1
+            LP=data[index].split('"')[1]
+
+        if 'previousClose' in i:
+            index=data.index(i)+1
+            PCP=data[index].split('"')[1]
+
+        if 'open' in i:
+            index=data.index(i)+1
+            DOP=data[index].split('"')[1]
+
+        if 'dayHigh' in i:
+            index=data.index(i)+1
+            DHP=data[index].split('"')[1]
+
+        if 'dayLow' in i:
+            index=data.index(i)+1
+            DLP=data[index].split('"')[1]
+
+    return LP,PCP,DOP,DHP,DLP
+
+regexp=re.compile('&')
+
+LP=[]
+PCP=[]
+DOP=[]
+DHP=[]
+DLP=[]
+
+# starting , used to check only one stock or all Nifty_50 stocks
+
+def start():
+    a=input(str("Do yo want to check for single stock (yes/no) ")) 
+    try:
+        if a=='yes' or a=='YES':
+            
+            stock_id=input(str('Enter the stock code (SBIN) = '))
+            if (regexp.search(stock_id) !=None):
+                stock_id=stock_id.replace('&','%26')
+
+            PreP,LastP,DayOP,DayHP,DayLP=N_50(stock_id)
+
+            PCP.append(str(PreP))
+            LP.append(str(LastP))
+            DOP.append(str(DayOP))
+            DHP.append(str(DayHP))
+            DLP.append(str(DayLP))
+               
+            for index, row in df.iterrows():
+                stock_id =df['Symbol']
+                print("--------------------------------------------------------------------------------------------------------------------------------------------")
+
+                print("|{:45s} | {:10s} | {:10s} | {:10s} | {:10s} | {:10s}|".format( 'Company Name','Symbol','lastPrice','openPrice','dayHigh','dayLow','closePrice'))
+
+                print("|{:45s} | {:10s} |{:10s} | {:10s} | {:10s} | {:10s} |".format(str(row['Company Name']), row['Symbol'], LP[index].rjust(10), DOP[index].rjust(10), DHP[index].rjust(10), DLP[index].rjust(10), PCP[index].rjust(10)))
+
+                print("--------------------------------------------------------------------------------------------------------------------------------------------")
+                break
+        else:
+            for index,row in df.iterrows():
+                stock_id=row['Symbol']
+                if (regexp.search(stock_id) !=None):
+                    stock_id=stock_id.replace('&','%26')
+
+                PreP,LastP,DayOP,DayHP,DayLP=N_50(stock_id)
+
+                PCP.append(str(PreP))
+                LP.append(str(LastP))
+                DOP.append(str(DayOP))
+                DHP.append(str(DayHP))
+                DLP.append(str(DayLP))
+            
+            
+            for index, row in df.iterrows():
+                stock_id = row['Symbol']
+                print("--------------------------------------------------------------------------------------------------------------------------------------------")
+
+                print("|{:45s} | {:10s} | {:10s} | {:10s} | {:10s} | {:10s}|".format( 'Company Name','Symbol','lastPrice','openPrice','dayHigh','dayLow','closePrice'))
+
+                print("|{:45s} | {:10s} |{:10s} | {:10s} | {:10s} | {:10s} |".format(str(row['Company Name']), row['Symbol'], LP[index].rjust(10), DOP[index].rjust(10), DHP[index].rjust(10), DLP[index].rjust(10), PCP[index].rjust(10)))
+
+                print("--------------------------------------------------------------------------------------------------------------------------------------------")
+
+    except Exception as e:
+        print(e)
+
+   
+df=pd.read_csv('https://www1.nseindia.com/content/indices/ind_nifty50list.csv')
+start()
